@@ -1,0 +1,20 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=1024
+
+Tabs and spaces are colored in slightly different colors from lightest to
+darkest for dark background or from darkest to lightest for light background
+example (x is darkest color and z lightest):
+
+    function foo()
+    x if b
+    x y echo &#039something&#039
+    x y while c
+    x y z echo &#039something else&#039
+    x y endwhile
+    x endif
+    endfunction
+    
+Actually it forms vertical stripes
+
+You can switch it off and on by 
+   :call OnOffIndentHi()
+
