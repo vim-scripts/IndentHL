@@ -2,26 +2,25 @@
 "
 " Vim Syntax Highlighting for indent whitespace
 "
-" Last change: 2004 July 15
-" Version: 0.1
+" Last change: 2004 July 7 (in 0.1 version date was wrong)
+" Version: 0.2
 " Author: Vedran Sajko <vsajko@oglasnik.hr>
-" Usage:
-" Put script in  ~/.vim/after/syntax/
-" and rename it to filename of the syntax
-" eg 
-" ~/.vim/after/syntax/c.vim
-" and
-" ~/.vim/after/syntax/php.vim
-" and
-" ~/.vim/after/syntax/vim.vim
-" and
-" ~/.vim/after/syntax/html.vim
+" Install:
+" Put script in  ~/.vim/after/syntax/php.vim
+"                or 
+"                ~/.vim/after/syntax/c.vim
+"                and
+"                ~/.vim/after/syntax/php.vim
+"                and
+"                ~/.vim/after/syntax/vim.vim
+"                and
+"                ~/.vim/after/syntax/html.vim
 "
-" I haven't test it with other syntaxes but hopefully works
+" I haven't test it with other syntaxes but hopefully works also
 "
 " Tabs and spaces are colored in slightly different colors from lightest to
-" darkest (more suitable for dark background)
-" example (" x is darkest color and z lightest):
+" darkest for dark background or from darkest to lightest for light background
+" example (x is darkest color and z lightest):
 " 
 "     function foo()
 "     x if b
@@ -32,17 +31,49 @@
 "     x endif
 "     endfunction
 "     
-" Actually it form vertical stripes
+" Actually script forms vertical stripes
 " 
+" Usage: 
 " You can switch it off and on by 
-" 
+"
 "    :call OnOffIndentHi()
 "
 " Works for me, maybe somebody else will like it
 " 
-" This is my first plugin
+" History:
+"  0.2  - support for light background,
+"         corrected some bugs
+"         and some checking added
+"  0.1  - initial version
+"  
 " 
- 
+" Colors can be changed by changing these values
+" This is values whitch is added to color 
+" (basic darkest color for dark background is 'Normal bg')
+let s:tabRadd = 0x00 "(red for tab)
+let s:tabGadd = 0x00 "(green for tab)
+let s:tabBadd = 0x11 "(blue for tab)
+let s:spRadd = 0x00  "(red for space)
+let s:spGadd = 0x11  "(green for space)
+let s:spBadd = 0x00  "(blue for space)
+
+function! s:ChekingAdd(val)
+	if a:val < 0 && &background == 'dark' 
+		let retv = -a:val
+	elseif a:val > 0 && &background == 'light' 
+		let retv = -a:val
+	else
+		let retv = a:val
+	endif
+
+	if retv > 0 && retv > 0xDD
+		return 0xDD
+	endif
+	if retv < 0 && retv < -0xdd
+		return -0xdd
+	endif
+		return retv
+endfunction
 
 
 
@@ -55,7 +86,7 @@ function! s:Dec2hexcol(val)
 	return s:Dec2hex16(x2) . s:Dec2hex16(x1)
 endfunction
 
-"convert nombers 10 - 16 to alphabetic
+"convert numbers 10 - 16 to alphabetic
 function! s:Dec2hex16(val)
 	if a:val==10
 	return 'a'
@@ -94,26 +125,58 @@ endfunction
 
 "Defines Highlighting Colors
 function! s:HiDefST()
-	let m=0
-	let sp=0
-	while m<=3
-		
+	let m = 0
+	let sp = 0
+	while m <= 3
+	
 		let n=0
+		" gets current normal background color for starting point
+		let boja = synIDattr(synIDtrans(hlID("Normal")), "bg#", 'GUI')
+		if strlen (boja) < 7 && &background == 'light'
+			let boja = '#ffffff'
+		elseif strlen (boja) < 7 && &background == 'dark'
+			let boja = '#000000'
+		endif
 		
-		let boja=synIDattr(synIDtrans(hlID("Normal")), "bg#")
+		let tabRaddc = s:ChekingAdd(s:tabRadd)
+		let tabGaddc = s:ChekingAdd(s:tabGadd)
+		let tabBaddc = s:ChekingAdd(s:tabBadd)
+		let spRaddc = s:ChekingAdd(s:spRadd)
+		let spGaddc = s:ChekingAdd(s:spGadd)
+		let spBaddc = s:ChekingAdd(s:spBadd)
+		
 		let bojaR='0x' . boja[1] . boja[2]
 		let bojaG='0x' . boja[3] . boja[4]
 		let bojaB='0x' . boja[5] . boja[6]
-		let bojaR=bojaR + 51
-		let bojaG=bojaG + 51
-		let bojaB=bojaB + 51
+
+		if &background == 'dark'
+			let bojaR = bojaR + 0x22
+			let bojaG = bojaG + 0x22
+			let bojaB = bojaB + 0x22
+		endif
+
+		if &background == 'light'
+			let bojaR = bojaR - 0x22
+			let bojaG = bojaG - 0x22
+			let bojaB = bojaB - 0x22
+		endif
 		
 		while n <= 2
-			exe 'hi def Tab'. sp .' guibg=#'. (s:Dec2hexcol(bojaR)+s:tabRadd) . (s:Dec2hexcol(bojaG)+s:tabGadd) . (s:Dec2hexcol(bojaB)+s:tabBadd)
-			exe 'hi def Space'. sp .' guibg=#'. (s:Dec2hexcol(bojaR)+s:spRadd) . (s:Dec2hexcol(bojaG)+s:spGadd) . (s:Dec2hexcol(bojaB)+s:spBadd)
-			let bojaR = bojaR - 17
-			let bojaG = bojaG - 17
-			let bojaB = bojaB - 17
+			exe 'hi def Tab'. sp .' guibg=#'. s:Dec2hexcol(bojaR+tabRaddc) . s:Dec2hexcol(bojaG+tabGaddc) . s:Dec2hexcol(bojaB+tabBaddc)
+			exe 'hi def Space'. sp .' guibg=#'. s:Dec2hexcol(bojaR+spRaddc) . s:Dec2hexcol(bojaG+spGaddc) . s:Dec2hexcol(bojaB+spBaddc)
+
+			if &background == 'dark'
+				let bojaR = bojaR - 0x11
+				let bojaG = bojaG - 0x11
+				let bojaB = bojaB - 0x11
+			endif
+
+			if &background == 'light'
+				let bojaR = bojaR + 0x11
+				let bojaG = bojaG + 0x11
+				let bojaB = bojaB + 0x11
+			endif
+			
 			let n = n + 1
 			let sp = sp + 1
 		endwhile 
@@ -123,9 +186,9 @@ endfunction
 
 "for switching indent highlighting off and on
 function! OnOffIndentHi()
-	if !s:SynMatchTSdefined
+	if strlen(synIDattr(synIDtrans(hlID("Tab0")), "bg#", 'GUI')) < 7
+		call s:SynMatchTS()
 		call s:HiDefST()
-		let s:SynMatchTSdefined = s:SynMatchTS()
 	else
 		let n = 0
 		while n <= 12
@@ -135,18 +198,10 @@ function! OnOffIndentHi()
 			exe 'highlight clear Space'.n
 			let n = n + 1
 		endwhile
-		let s:SynMatchTSdefined = 0
 	endif
 endfunction
 
-" Colors can be changed by changing these values
-" This is values whitch is added to color
-let s:tabRadd = 0
-let s:tabGadd = 0
-let s:tabBadd = 20
-let s:spRadd = 20
-let s:spGadd = 0
-let s:spBadd = 0
 
-let s:SynMatchTSdefined = s:SynMatchTS()
-call s:HiDefST()
+
+
+call OnOffIndentHi()
